@@ -1,0 +1,12 @@
+{
+  "verify": ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-v"],
+  "normal_checks": [
+    ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-v"],
+    ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-p", "test_capture_flow.py", "-v"],
+    ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-p", "test_parser.py", "-v"],
+    ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-p", "test_review.py", "-v"],
+    ["python3.11", "-B", "-m", "unittest", "discover", "-s", "tests", "-p", "test_idempotence.py", "-v"]
+  ],
+  "demo": ["python3.11", "-B", "-m", "permit_capture.intake", "--manifest", "examples/normal_day.json", "--case", "normal_day", "--demo"],
+  "capture": ["python3.11", "-B", "-m", "permit_capture.intake", "--manifest", "examples/normal_day.json", "--case", "normal_day", "--workdir", ".permit-work"]
+}

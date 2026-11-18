@@ -1,0 +1,40 @@
+{
+  "normal_day": {
+    "batch_id": "chengjiang-2024-03-01",
+    "table_selector": "#permits",
+    "pages": [
+      {
+        "page_no": 1,
+        "url": "https://permits.example.test/list?page=1",
+        "html": "<!DOCTYPE html><html><body><p>澄江市许可公示</p><table id=\"permits\"><thead><tr><th>permit_no</th><th>issued_on</th><th>status</th><th>district</th><th>applicant</th></tr></thead><tbody><tr data-row-key=\"permit-1\"><td> cj-001 </td><td>2024-02-29</td><td>approved</td><td>NORTH</td><td>李<span class=\"footnote\">附注1</span>明</td></tr><tr><td>CJ-002</td><td>2024-03-01</td><td>pending</td><td>EAST</td><td></td></tr></tbody></table></body></html>"
+      },
+      {
+        "page_no": 2,
+        "url": "https://permits.example.test/list?page=2",
+        "html": "<table id=\"permits\"><thead><tr><th>permit_no</th><th>issued_on</th><th>status</th><th>district</th><th>applicant</th></tr></thead><tbody><tr><td>CJ-003</td><td>2024-03-01</td><td>revoked</td><td>NORTH</td><td>A &amp; B</td></tr></tbody></table>"
+      }
+    ]
+  },
+  "retry": {
+    "batch_id": "retry-example",
+    "table_selector": "#permits",
+    "pages": [
+      {
+        "page_no": 1,
+        "url": "https://permits.example.test/retry",
+        "html": "<table id=\"permits\"><thead><tr><th>permit_no</th><th>issued_on</th><th>status</th><th>district</th><th>applicant</th></tr></thead><tbody><tr><td>CJ-001</td><td>2024-02-29</td><td>approved</td><td>NORTH</td><td></td></tr></tbody></table>"
+      }
+    ]
+  },
+  "invalid_date": {
+    "batch_id": "bad-calendar",
+    "table_selector": "#permits",
+    "pages": [
+      {
+        "page_no": 1,
+        "url": "https://permits.example.test/bad",
+        "html": "<table id=\"permits\"><thead><tr><th>permit_no</th><th>issued_on</th><th>status</th><th>district</th><th>applicant</th></tr></thead><tbody><tr><td>CJ-009</td><td>2025-02-29</td><td>approved</td><td>NORTH</td><td></td></tr></tbody></table>"
+      }
+    ]
+  }
+}
