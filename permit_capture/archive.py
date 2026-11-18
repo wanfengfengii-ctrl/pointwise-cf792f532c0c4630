@@ -3,7 +3,8 @@ import os
 import re
 import shutil
 import tempfile
-from .archive_codec import decode_snapshot, publication_fingerprint
+from .archive_codec import (decode_artifact, SPAN_SNAPSHOT_FORMAT_VERSION,
+                            publication_fingerprint)
 
 
 class ArchiveError(ValueError):
@@ -42,9 +43,13 @@ class ArchiveRepository:
         return matches[0] if matches else None
 
     def stage(self, snapshot_bytes, pages):
-        snapshot = decode_snapshot(snapshot_bytes)
-        from .reader import validate_snapshot_materials
-        validate_snapshot_materials(snapshot, pages)
+        snapshot = decode_artifact(snapshot_bytes)
+        if snapshot['format'] == SPAN_SNAPSHOT_FORMAT_VERSION:
+            from .span_capture import validate_span_materials
+            validate_span_materials(snapshot, pages)
+        else:
+            from .reader import validate_snapshot_materials
+            validate_snapshot_materials(snapshot, pages)
         candidate = Path(tempfile.mkdtemp(prefix='candidate-', dir=self.staging))
         try:
             (candidate / 'pages').mkdir()
@@ -67,12 +72,16 @@ class ArchiveRepository:
         candidate = Path(candidate)
         if candidate.parent != self.staging:
             raise ArchiveError('foreign candidate')
-        snapshot = decode_snapshot((candidate / 'snapshot.json').read_bytes())
+        raw = (candidate / 'snapshot.json').read_bytes()
+        snapshot = decode_artifact(raw)
         identifier = publication_fingerprint(snapshot)
         from .reader import PublicationSnapshot
         from .replay import verify_snapshot
+        from .span_capture import verify_span_snapshot
         pages = {p['page_no']: (candidate / p['path']).read_bytes() for p in snapshot['pages']}
-        report = verify_snapshot(PublicationSnapshot(identifier, snapshot, pages))
+        checker = (verify_span_snapshot
+                   if snapshot['format'] == SPAN_SNAPSHOT_FORMAT_VERSION else verify_snapshot)
+        report = checker(PublicationSnapshot(identifier, snapshot, pages))
         if not report.ok:
             raise ArchiveError('; '.join(report.errors))
         old = self.find_batch(snapshot['batch_id'])
@@ -99,7 +108,7 @@ class ArchiveRepository:
         folder = self.publications / publication_id
         try:
             raw = (folder / 'snapshot.json').read_bytes()
-            snapshot = decode_snapshot(raw)
+            snapshot = decode_artifact(raw)
             if publication_fingerprint(snapshot) != publication_id:
                 raise ArchiveError('snapshot fingerprint mismatch')
             pages = {p['page_no']: (folder / p['path']).read_bytes() for p in snapshot['pages']}

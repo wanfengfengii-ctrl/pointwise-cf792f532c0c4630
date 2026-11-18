@@ -51,13 +51,33 @@ It asserts results before emitting a POINTWISE_SCENARIO JSON line.
 See V1-CONTRACT.md for types, field rules, supported HTML and failure semantics.
 RUNBOOK.json and .pointwise-runtime.json contain executable argument arrays.
 
+## Cross-page capture (V2)
+
+`tablecapture.Capture(workdir, manifest=None)` accepts the same ordered
+declarations and retains the V1 status/page/sha256 dictionary. It additionally
+expands rowspan and colspan across page boundaries, merges same-key
+continuations that inherit at least one cell, keeps every distinct original
+cell per field and every physical member row, and publishes a bound immutable
+V2 snapshot into the same `ArchiveRepository` as V1. `read(batch_id)` and
+`verify(batch_id)` replay from the archived original pages and nothing else.
+See CROSSPAGE.md for the contract and HANDOFF.md for invariants.
+
+```sh
+python3.11 -B crosspage_cases.py materials   # fixtures only
+python3.11 -B crosspage_cases.py verify      # public cross-page checks
+python3.11 -B verify_v2.py verify            # full suite + cross-page checks
+python3.11 -B verify_v2.py demo              # inherited origins and records
+```
+
 ## Storage and responsibilities
 
 `batch_state`, `source_manifest`, `page_store`, `url_rules` and `intake`
 own declarations, retries and captured inputs. `table_locator`, `schema`,
 `footnotes`, `grid` and `html_parser` produce byte-positioned page-local rows.
 `field_rules`, `identity`, `row_validation` and `record_normalizer` produce
-validated permits. `evidence`, `archive_codec`, `archive`, `publication`
+validated permits. `span_capture` and the top-level `tablecapture` expand
+cross-page spans and publish V2 snapshots. `evidence`, `archive_codec`,
+`archive`, `publication`
 and `reader` own bound immutable publications. `filter_rules`, `query`,
 `review`, `replay` and `export` perform fixed-version research and delivery.
 
@@ -70,3 +90,8 @@ This is a local, single-writer V1. It accepts fixed columns and complete rows on
 each page. Spans other than 1, nested tables and tbody headers are explicit errors.
 Evidence is at whole-row granularity. The format provides integrity checks, not
 authentication. It does not provide a browser, network fetching or field inference.
+
+V2 adds cross-page span capture through `tablecapture.Capture` while leaving
+every V1 entry point, snapshot and failure semantic unchanged. V2 snapshots are
+versioned separately (`format: 2`) and share the same archive, staging and
+material checks; V1 and V2 batch ids remain immutable and cannot cross versions.

@@ -69,8 +69,15 @@ class IntakeService:
             except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
                 raise IntakeError('STATE', str(exc)) from exc
         batch = self.batches[batch_id]
-        if self.archive.find_batch(batch_id) is not None:
-            batch.status = BatchStatus.PUBLISHED
+        published = self.archive.find_batch(batch_id)
+        if published is not None:
+            try:
+                content, _ = self.archive.load(published)
+            except ValueError:
+                batch.status = BatchStatus.PUBLISHED
+            else:
+                if content.get('format') == 1:
+                    batch.status = BatchStatus.PUBLISHED
         return batch
 
     def register(self, manifest):
@@ -147,6 +154,9 @@ class IntakeService:
         self.register(manifest)
         old = self.archive.find_batch(manifest.batch_id)
         if old is not None:
+            content, _ = self.archive.load(old)
+            if content.get('format') != 1:
+                raise IntakeError('BATCH_FORMAT', 'batch id belongs to a cross-page publication')
             from .replay import verify_publication
             report = verify_publication(self.archive, old)
             if not report.ok:

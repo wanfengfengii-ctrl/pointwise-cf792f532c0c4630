@@ -53,6 +53,14 @@ def verify_snapshot(snapshot):
 
 def verify_publication(repository, publication_id):
     try:
+        content, pages = repository.load(publication_id)
+    except (ValueError, OSError):
+        return VerificationReport(False, publication_id, 0, ('unknown or damaged publication',))
+    from .archive_codec import SPAN_SNAPSHOT_FORMAT_VERSION
+    if content.get('format') == SPAN_SNAPSHOT_FORMAT_VERSION:
+        from .span_capture import verify_span_snapshot
+        return verify_span_snapshot(PublicationSnapshot(publication_id, content, pages))
+    try:
         return verify_snapshot(load_publication(repository, publication_id))
     except (ValueError, OSError) as exc:
         return VerificationReport(False, publication_id, 0, (str(exc),))
